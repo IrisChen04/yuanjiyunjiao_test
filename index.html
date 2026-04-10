@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>你是袁记哪道菜？</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* 袁记品牌绿 */
+      --green:       #2D6A4F;
+      --dark-green:  #1B4332;
+      --mid-green:   #40916C;
+      --light-green: #74C69D;
+      --pale-green:  #D8F3DC;
+      --accent:      #B7E4C7;
+
+      /* 辅助暖白 */
+      --cream:       #F8FBF9;
+      --warm-white:  #FFFFFF;
+
+      /* 文字 */
+      --text-dark:   #1B2E22;
+      --text-mid:    #2D5A3D;
+      --text-light:  #6B9E7E;
+
+      /* 阴影 */
+      --shadow:      rgba(45, 106, 79, 0.15);
+    }
+
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== SCREENS ===== */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ===== COVER ===== */
+    #cover {
+      background: linear-gradient(160deg, #2D6A4F 0%, #1B4332 55%, #081C15 100%);
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #cover::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 260px; height: 260px;
+      background: rgba(116,198,157,0.08);
+      border-radius: 50%;
+    }
+    #cover::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: -40px;
+      width: 320px; height: 320px;
+      background: rgba(116,198,157,0.05);
+      border-radius: 50%;
+    }
+
+    /* 装饰圆点 */
+    .cover-deco {
+      position: absolute;
+      top: 30%; left: -20px;
+      width: 120px; height: 120px;
+      background: rgba(116,198,157,0.06);
+      border-radius: 50%;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background: rgba(116,198,157,0.18);
+      border: 1px solid rgba(116,198,157,0.4);
+      color: var(--light-green);
+      font-size: 12px;
+      letter-spacing: 2px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .cover-emoji {
+      font-size: 84px;
+      display: block;
+      margin-bottom: 20px;
+      animation: bounceIn 0.8s ease 0.2s both;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+    }
+
+    .cover-title {
+      font-size: 34px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      animation: fadeUp 0.6s ease 0.3s both;
+    }
+
+    .cover-title span {
+      color: var(--light-green);
+    }
+
+    .cover-sub {
+      font-size: 15px;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 32px;
+      line-height: 1.7;
+      animation: fadeUp 0.6s ease 0.4s both;
+    }
+
+    .cover-tags {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+      animation: fadeUp 0.6s ease 0.5s both;
+    }
+
+    .tag {
+      background: rgba(116,198,157,0.12);
+      border: 1px solid rgba(116,198,157,0.25);
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 12px;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, var(--light-green), var(--mid-green));
+      color: #fff;
+      font-size: 18px;
+      font-weight: 800;
+      padding: 16px 52px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 8px 28px rgba(64,145,108,0.45);
+      animation: fadeUp 0.6s ease 0.6s both;
+      transition: transform 0.2s, box-shadow 0.2s;
+      letter-spacing: 2px;
+    }
+
+    .btn-start:active {
+      transform: scale(0.96);
+      box-shadow: 0 4px 14px rgba(64,145,108,0.3);
+    }
+
+    .cover-note {
+      margin-top: 20px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      animation: fadeUp 0.6s ease 0.7s both;
+    }
+
+    /* ===== QUIZ ===== */
+    #quiz {
+      background: var(--cream);
+    }
+
+    .quiz-header {
+      background: linear-gradient(135deg, var(--green), var(--dark-green));
+      padding: 20px 20px 28px;
+    }
+
+    .quiz-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .quiz-back {
+      background: rgba(255,255,255,0.12);
+      border: none;
+      color: #fff;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .quiz-back:active { background: rgba(255,255,255,0.22); }
+
+    .quiz-counter {
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+      font-weight: 700;
+    }
+
+    .quiz-group-label {
+      font-size: 12px;
+      color: var(--light-green);
+      letter-spacing: 1px;
+    }
+
+    .progress-bar {
+      height: 5px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--light-green), #B7E4C7);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .quiz-body {
+      padding: 24px 20px 40px;
+      flex: 1;
+    }
+
+    .question-card {
+      background: var(--warm-white);
+      border-radius: 20px;
+      padding: 24px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px var(--shadow);
+      border: 1px solid rgba(45,106,79,0.08);
+    }
+
+    .question-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--mid-green);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .question-num::before {
+      content: '';
+      display: inline-block;
+      width: 3px; height: 14px;
+      background: var(--green);
+      border-radius: 2px;
+    }
+
+    .question-text {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-btn {
+      background: var(--warm-white);
+      border: 2px solid rgba(45,106,79,0.1);
+      border-radius: 16px;
+      padding: 15px 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 15px;
+      color: var(--text-dark);
+      line-height: 1.5;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .option-btn:active { transform: scale(0.98); }
+
+    .option-btn.selected {
+      background: linear-gradient(135deg, #EBF8F0, #D8F3DC);
+      border-color: var(--green);
+      box-shadow: 0 4px 16px rgba(45,106,79,0.18);
+    }
+
+    .option-letter {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      min-width: 28px;
+      background: var(--pale-green);
+      color: var(--green);
+      font-weight: 800;
+      font-size: 13px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .option-btn.selected .option-letter {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .btn-next {
+      width: 100%;
+      background: linear-gradient(135deg, var(--green), var(--dark-green));
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      padding: 16px;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(45,106,79,0.3);
+      transition: all 0.2s;
+      letter-spacing: 1px;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .btn-next.enabled {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .btn-next.enabled:active { transform: scale(0.98); }
+
+    /* ===== LOADING ===== */
+    #loading {
+      background: linear-gradient(160deg, #2D6A4F 0%, #1B4332 60%, #081C15 100%);
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 24px;
+    }
+
+    .loading-emoji {
+      font-size: 72px;
+      display: block;
+      margin-bottom: 24px;
+      animation: floatBounce 1.2s ease-in-out infinite;
+    }
+
+    .loading-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .loading-sub {
+      font-size: 14px;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .dot {
+      width: 10px; height: 10px;
+      background: var(--light-green);
+      border-radius: 50%;
+      animation: dotBounce 1.2s ease infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    /* ===== RESULT ===== */
+    #result {
+      background: var(--cream);
+      padding-bottom: 48px;
+    }
+
+    .result-hero {
+      background: linear-gradient(160deg, var(--green) 0%, var(--dark-green) 100%);
+      padding: 52px 24px 64px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .result-hero::before {
+      content: '';
+      position: absolute;
+      top: -50px; right: -50px;
+      width: 220px; height: 220px;
+      background: rgba(116,198,157,0.08);
+      border-radius: 50%;
+    }
+    .result-hero::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: -30px;
+      width: 180px; height: 180px;
+      background: rgba(116,198,157,0.06);
+      border-radius: 50%;
+    }
+
+    .result-label {
+      display: inline-block;
+      background: rgba(116,198,157,0.18);
+      border: 1px solid rgba(116,198,157,0.35);
+      color: var(--light-green);
+      font-size: 11px;
+      letter-spacing: 2px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .result-emoji {
+      font-size: 92px;
+      display: block;
+      margin-bottom: 16px;
+      animation: bounceIn 0.8s ease both;
+      filter: drop-shadow(0 8px 20px rgba(0,0,0,0.25));
+    }
+
+    .result-dish-name {
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 10px;
+      position: relative; z-index: 1;
+    }
+
+    .result-tagline {
+      font-size: 14px;
+      color: rgba(255,255,255,0.75);
+      font-style: italic;
+      line-height: 1.7;
+      padding: 0 16px;
+      position: relative; z-index: 1;
+    }
+
+    .result-body {
+      padding: 0 20px;
+      margin-top: -28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .result-card {
+      background: var(--warm-white);
+      border-radius: 20px;
+      padding: 22px 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 20px var(--shadow);
+      border: 1px solid rgba(45,106,79,0.07);
+    }
+
+    .result-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .result-desc {
+      font-size: 15px;
+      color: var(--text-mid);
+      line-height: 1.85;
+      font-style: italic;
+    }
+
+    .keywords-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .keyword-tag {
+      background: linear-gradient(135deg, #EBF8F0, #D8F3DC);
+      border: 1px solid rgba(45,106,79,0.18);
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+
+    .trait-text {
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.7;
+    }
+
+    .score-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .score-label {
+      font-size: 12px;
+      color: var(--text-light);
+      width: 52px;
+      flex-shrink: 0;
+    }
+
+    .score-track {
+      flex: 1;
+      height: 8px;
+      background: var(--pale-green);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .score-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--light-green));
+      border-radius: 4px;
+      transition: width 1s ease 0.4s;
+      width: 0%;
+    }
+
+    .score-val {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--green);
+      width: 32px;
+      text-align: right;
+    }
+
+    .btn-retry {
+      width: 100%;
+      background: linear-gradient(135deg, var(--green), var(--dark-green));
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 16px;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(45,106,79,0.3);
+      margin-top: 8px;
+      letter-spacing: 1px;
+      transition: transform 0.2s;
+    }
+    .btn-retry:active { transform: scale(0.98); }
+
+    .btn-share {
+      width: 100%;
+      background: linear-gradient(135deg, var(--mid-green), var(--light-green));
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 16px;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(64,145,108,0.35);
+      margin-top: 12px;
+      letter-spacing: 1px;
+      transition: transform 0.2s;
+    }
+    .btn-share:active { transform: scale(0.98); }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounceIn {
+      0%   { transform: scale(0.3); opacity: 0; }
+      60%  { transform: scale(1.12); }
+      80%  { transform: scale(0.94); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes floatBounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-14px); }
+    }
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40%           { transform: scale(1);   opacity: 1; }
+    }
+
+    .slide-in {
+      animation: fadeUp 0.32s ease both;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== COVER ===== -->
+<div id="cover" class="screen active">
+  <div class="cover-deco"></div>
+  <div style="position:relative;z-index:1;">
+    <div class="cover-badge">🧪 心理性格测试</div>
+    <span class="cover-emoji">🥟</span>
+    <h1 class="cover-title">你是袁记的<br/><span>哪道菜？</span></h1>
+    <p class="cover-sub">24道题，测出你的专属饺子人格<br/>基于大五人格理论科学设计</p>
+    <div class="cover-tags">
+      <span class="tag">🔬 心理学驱动</span>
+      <span class="tag">🥟 8种结果</span>
+      <span class="tag">⏱️ 约3分钟</span>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">开始测试</button>
+    <p class="cover-note">选择最符合你真实感受的答案效果最佳</p>
+  </div>
+</div>
+
+<!-- ===== QUIZ ===== -->
+<div id="quiz" class="screen">
+  <div class="quiz-header">
+    <div class="quiz-nav">
+      <button class="quiz-back" onclick="goBack()">‹</button>
+      <span class="quiz-counter" id="counter">1 / 24</span>
+      <span class="quiz-group-label" id="group-label">能量感</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress" style="width:4%"></div>
+    </div>
+  </div>
+  <div class="quiz-body">
+    <div class="question-card" id="question-card">
+      <div class="question-num" id="q-num">Q1</div>
+      <div class="question-text" id="q-text"></div>
+    </div>
+    <div class="options-list" id="options-list"></div>
+    <br/>
+    <button class="btn-next" id="btn-next" onclick="nextQuestion()">下一题 →</button>
+  </div>
+</div>
+
+<!-- ===== LOADING ===== -->
+<div id="loading" class="screen">
+  <div>
+    <span class="loading-emoji">🥟</span>
+    <div class="loading-title">正在包你的专属饺子…</div>
+    <div class="loading-sub">心理学家正在分析你的人格特质<br/>请稍等片刻</div>
+    <div class="loading-dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RESULT ===== -->
+<div id="result" class="screen">
+  <div class="result-hero">
+    <div class="result-label">你的专属饺子人格</div>
+    <span class="result-emoji" id="r-emoji"></span>
+    <div class="result-dish-name" id="r-name"></div>
+    <div class="result-tagline" id="r-tagline"></div>
+  </div>
+  <div class="result-body">
+    <div class="result-card">
+      <div class="result-card-title">📖 你的饺子故事</div>
+      <div class="result-desc" id="r-desc"></div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-title">✨ 性格关键词</div>
+      <div class="keywords-wrap" id="r-keywords"></div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-title">💪 你的优势</div>
+      <div class="trait-text" id="r-strength"></div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-title">🔍 你的盲点</div>
+      <div class="trait-text" id="r-blind"></div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-title">🌱 适合你的生活方式</div>
+      <div class="trait-text" id="r-life"></div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-title">📊 你的人格维度</div>
+      <div class="score-bars" id="r-scores"></div>
+    </div>
+    <button class="btn-share" onclick="shareResult()">📤 分享给朋友测一测</button>
+    <button class="btn-retry" onclick="retryQuiz()">🔄 重新测试</button>
+  </div>
+</div>
+
+<script>
+const groups = ["🔥 能量感","🏛️ 传统/创新","👥 社交性","⚓ 稳定性","🎨 丰富性","🎯 综合"];
+
+const questions = [
+  { group:0, text:"周五晚上，你推开袁记云饺的门，你希望看到的是？",
+    options:["安静的角落小桌，一个人，一碗饺子，一杯热茶 🍵","熟悉的朋友，两三人，边吃边聊，不紧不慢","一大桌人，菜一道道上，热气腾腾，嗷嗷叫着加菜","我就是那个订了最大包间、最后一个离开、还在问"再来一笼？"的人"],
+    dim:0, scores:[0,1,2,3] },
+  { group:0, text:"如果你把今天在袁记吃饺子的体验发到朋友圈，你会怎么发？",
+    options:["不发，好吃是我自己的事","拍一张好看的图，配几个字，发完就不看了","拍图+写感受，顺手@了一起来的朋友","拍视频、写长文、做九宫格，恨不得让全世界知道我在吃袁记"],
+    dim:0, scores:[0,1,2,3] },
+  { group:0, text:"袁记的红油抄手摆在你面前，你的第一反应是？",
+    options:["先问一句：这个辣吗？能不能换清汤？","尝一个，可以接受，但我更爱原味的","直接开吃，辣得刚刚好，这才是吃饺子的感觉","让服务员再加一勺红油，不够辣不够爽 🌶️"],
+    dim:0, scores:[0,1,2,3] },
+  { group:0, text:"你在袁记吃饭，旁边桌的人最可能怎么描述你？",
+    options:[""那个人一直低头吃饭，安安静静的"",""感觉是个温柔的人，偶尔笑一下很好看"",""很开朗，一直在聊天，感觉认识他/她很开心"",""全场最有存在感的，连服务员都记住他/她了""],
+    dim:0, scores:[0,1,2,3] },
+  { group:1, text:"拿到袁记菜单，你的第一个动作是？",
+    options:["直接翻到"招牌推荐"，点销量第一，经典不会错","问服务员今天什么好吃，听推荐再决定","从头到尾扫一遍，挑几道没点过的试试","专门找菜单角落里那道最冷门的菜，就是要踩雷也值得"],
+    dim:1, scores:[0,1,2,3] },
+  { group:1, text:"袁记每隔一段时间会出新品，你的态度是？",
+    options:["不感兴趣，我来就是为了那几道老朋友","会看一眼，但大概率还是点回熟悉的","新品必点，万一好吃呢？","新品上线当天就去打卡，还要发评测"],
+    dim:1, scores:[0,1,2,3] },
+  { group:1, text:"袁记有两种饺子师傅：一种二十年只做猪肉大葱，皮薄馅匀无人能及；另一种不断研发新口味，芝士、黑松露、榴莲馅都敢试。你更欣赏哪种？",
+    options:["前者，把一件事做到极致就是最高境界","前者为主，但也需要一点与时俱进","后者更有意思，创新才能让饺子文化走得更远","后者！榴莲饺子我第一个去吃！"],
+    dim:1, scores:[0,1,2,3] },
+  { group:1, text:"你上一次在袁记点了一道"从没点过的新口味"是什么时候？",
+    options:["想不起来了，我每次都点一样的","大概半年前？偶尔会换换","上个月就有，我隔一段时间就想试新的","上次来就点了新的，我从不重复点同一道菜"],
+    dim:1, scores:[0,1,2,3] },
+  { group:2, text:"一场袁记聚餐结束，大家散场了，你是什么状态？",
+    options:["终于可以一个人待着了，社交耗尽，需要充电","有点累，但睡一觉就好，整体还不错","意犹未尽，在门口又聊了半小时才走","我就是那个说"要不去下一场？"的人"],
+    dim:2, scores:[0,1,2,3] },
+  { group:2, text:"你在袁记吃饭，最理想的座位是？",
+    options:["靠窗的独座，一个人，安静看窗外","两人小桌，旁边有人但不需要一直说话","四人桌，可以随时聊，气氛刚好","大圆桌！人越多越好，菜转起来才有感觉"],
+    dim:2, scores:[0,1,2,3] },
+  { group:2, text:"朋友深夜发消息说失恋了很难受，你的第一反应是？",
+    options:["发几句安慰的话，但坦白说我不太擅长处理这种情况","认真听他/她说完，给出我觉得最有用的建议","陪他/她聊到凌晨，一直聊到他/她好一点",""你在哪？我现在去找你，顺便带你去吃袁记，吃饺子什么都会好的" 🥟"],
+    dim:2, scores:[0,1,2,3] },
+  { group:2, text:"你心目中最完美的袁记用餐场景是？",
+    options:["一个人，一碗招牌水饺，一本书或者一部剧，安静又自由","两三个最亲近的人，边吃边聊那些不能对外人说的事","五六个朋友，热闹但不嘈杂，每人点不同的分着吃","大桌家庭聚餐，老少三代，蒸饺煎饺水饺全上，越乱越有烟火气"],
+    dim:2, scores:[0,1,2,3] },
+  { group:3, text:"袁记出了一款"神秘盲盒饺子"——不告诉你馅料，可能是你最爱的，也可能是你最怕的，你会点吗？",
+    options:["不点，我花钱吃饭不是来冒险的","先问问服务员有没有什么提示，再决定","有点犹豫，但可能会试，大不了吃不完","直接点两份！不确定才刺激！"],
+    dim:3, scores:[0,1,2,3] },
+  { group:3, text:"你和朋友约好去袁记，你的准备方式是？",
+    options:["提前看好菜单、查好停车、确认排队情况，万事俱备","大概知道想吃什么，其他到了再说","就知道要去吃饺子，具体点什么到了再看","说走就走，连哪家门店都没定，边走边找"],
+    dim:3, scores:[0,1,2,3] },
+  { group:3, text:"袁记要在你家附近开新店，但你最爱的那家老店要关了，你怎么看？",
+    options:["很难受，那家老店承载了我很多回忆，新的不一样","有点遗憾，但能理解，慢慢接受新的","无所谓，近一点更方便，口味都一样","太好了！新店新气象，说不定还有新菜单！"],
+    dim:3, scores:[0,1,2,3] },
+  { group:3, text:"结账的时候，你发现今天点的菜比预期贵了不少，你会？",
+    options:["早就算好了，我点菜前就把价格加起来了","有点意外，但在接受范围内，下次注意","有点小心疼，但吃都吃了，算了","完全没在意，吃得开心就行，钱是小事"],
+    dim:3, scores:[0,1,2,3] },
+  { group:4, text:"你点菜的方式是？",
+    options:["固定两三道，每次一样，简单高效","有几个必点，再加一道今天心情想吃的","每次都想多点几道，总觉得少了什么","恨不得每道都点，最后被朋友强行拦下来"],
+    dim:4, scores:[0,1,2,3] },
+  { group:4, text:"袁记出了一本"饺子文化故事书"，你会怎么看？",
+    options:["不感兴趣，好吃就行，背后的故事不重要","随手翻翻，有意思的地方看一看","认真读，了解每道菜背后的来历很有意思","读完还要去查资料，研究饺子的历史演变和地域差异"],
+    dim:4, scores:[0,1,2,3] },
+  { group:4, text:"你对袁记菜单的熟悉程度是？",
+    options:["就认识那几道，其他的不关心","常见的都知道，偶尔发现新的","菜单大部分都点过，还会关注季节限定","菜单我能背出来，哪道菜什么馅、什么皮、怎么蘸都门清"],
+    dim:4, scores:[0,1,2,3] },
+  { group:4, text:"你蘸料的风格是？",
+    options:["原味，什么都不加，就吃饺子本来的味道","醋+少量酱油，经典搭配，稳稳的","醋+辣油+蒜末，层次丰富，每口都不一样","把桌上所有调料都试一遍，自创专属蘸料配方"],
+    dim:4, scores:[0,1,2,3] },
+  { group:5, text:"袁记的广告语如果让你来写，你会选哪句？",
+    options:[""一碗饺子，一种踏实"",""认真做好每一个褶"",""每次来，都有新发现"",""敢包天下，敢创未来""],
+    multiDim:true,
+    dimScores:[[0,0,0,0,0],[0,0,0,0,0],[0,2,0,0,2],[2,2,0,2,0]] },
+  { group:5, text:"如果袁记的每道菜都是一种天气，你觉得你是哪种？",
+    options:["晴天——像招牌猪肉大葱，温暖、稳定、让所有人都舒服 ☀️","多云转晴——像素三鲜蒸饺，平和中带着清新的惊喜 ⛅","阵雨——像酸辣汤，说来就来，情绪丰富，喝完回味无穷 🌦️","雷暴——像红油抄手，有力量、有冲击感、让人印象深刻 ⛈️"],
+    multiDim:true,
+    dimScores:[[0,0,0,0,0],[0,0,0,0,1],[1,0,1,1,2],[3,0,0,2,0]] },
+  { group:5, text:"你们一桌人去袁记，点菜的时候你通常是？",
+    options:["安静等别人点，说一句"我都行，你们决定"","负责协调：问清楚每个人的忌口和偏好，帮大家平衡","出主意的那个：这道要点、那道也不能少、再加个汤","直接拿过菜单："我来点，你们等着就行""],
+    multiDim:true,
+    dimScores:[[0,0,0,0,0],[0,0,2,0,0],[0,1,1,0,2],[2,0,1,1,0]] },
+  { group:5, text:"最后一题！今天就去袁记，你会怎么点？",
+    options:["招牌猪肉大葱水饺，老规矩，百吃不厌，就是它了 🥟","看看今天有没有新品，但最后可能还是点回熟悉的那几道","专门挑没点过的，这次就是要试新的，管它好不好吃","来一份什么都有的大拼盘，选择困难症，全都要！"],
+    multiDim:true,
+    dimScores:[[0,0,0,0,0],[0,1,0,0,0],[0,3,0,2,0],[1,1,2,0,3]] }
+];
+
+const results = [
+  { id:"pork_scallion", emoji:"🥟", name:"招牌猪肉大葱水饺",
+    tagline:"「经典永不过时，你是人间最踏实的温柔」",
+    desc:"你不需要华丽的包装，因为你本身就是答案。就像这道菜——简单、直接、让人放心，每一口都是"对，就是这个味"的满足感。",
+    keywords:["可靠","稳重","真诚","不折腾"],
+    strength:"是朋友圈里最靠谱的那个，说到做到，大家遇到事情第一个想到你。",
+    blind:"有时候太安于现状，错过了一些本可以更好的可能性。",
+    life:"把熟悉的事做到极致，在稳定中找到深层的幸福感。",
+    match: s => s[0]<=5 && s[1]<=5 && s[3]<=5 && s[4]<=5 },
+  { id:"red_oil", emoji:"🌶️", name:"红油抄手",
+    tagline:"「你是人群里的那把火，走到哪里都点亮哪里」",
+    desc:"红油抄手不是给所有人准备的，但爱它的人，爱得死心塌地。你就是这样——有人被你的热情点燃，也有人被你的强度吓到，但你从不为此道歉。",
+    keywords:["热情","直接","存在感强","敢爱敢恨"],
+    strength:"天生的气场，能快速激活一个团队或聚会的氛围。",
+    blind:"情绪来得快去得也快，有时候会让身边人不知所措。",
+    life:"把热情投入到真正值得的事和人身上，学会控制"火候"。",
+    match: s => s[0]>=8 && s[3]>=6 },
+  { id:"veg_steam", emoji:"🥬", name:"素三鲜蒸饺",
+    tagline:"「清醒、干净、内心有一片只属于自己的森林」",
+    desc:"素三鲜看起来朴素，但每一口都层次分明。你也是这样——不争不抢，但内心世界比任何人都丰富。懂你的人，会觉得你是稀世珍宝。",
+    keywords:["内敛","细腻","清醒","有边界感"],
+    strength:"极强的自我觉察力，不容易被外界影响，情绪稳定。",
+    blind:"有时候太封闭，让真正想靠近你的人不知道如何进入。",
+    life:"保护好自己的内在空间，同时允许少数人真正走进来。",
+    match: s => s[0]<=4 && s[2]<=5 && s[4]>=5 },
+  { id:"shrimp_wonton", emoji:"🦐", name:"鲜虾云吞",
+    tagline:"「低调的精致，是你给自己最好的交代」",
+    desc:"鲜虾云吞皮薄馅鲜，每一个细节都恰到好处。你对生活有自己的标准，不将就，不凑合，但这种讲究是给自己的，不是用来炫耀的。",
+    keywords:["精致","有品位","自律","低调"],
+    strength:"审美在线，做事有质感，是那种"细节控"。",
+    blind:"标准太高有时会让自己疲惫，也可能对他人要求过严。",
+    life:"在精致和放松之间找到平衡，允许自己偶尔"将就"一次。",
+    match: s => s[0]<=6 && s[1]<=5 && s[3]<=5 && s[4]>=5 },
+  { id:"beef_dumpling", emoji:"🥩", name:"牛肉水饺",
+    tagline:"「硬核、有力量，你是那种越压越强的人」",
+    desc:"牛肉水饺没有花哨的外表，但咬下去的那一口，扎实得让人信服。你也是——不废话，不表演，用结果说话。",
+    keywords:["直接","有原则","抗压","不服输"],
+    strength:"执行力强，不轻易放弃，是团队里最能扛事的人。",
+    blind:"有时候太硬，不太会示弱，容易让关系变得紧绷。",
+    life:"在保持力量感的同时，学会偶尔放下盔甲。",
+    match: s => s[0]>=6 && s[1]<=6 && s[3]<=6 && s[4]<=6 },
+  { id:"mushroom", emoji:"🍄", name:"菌菇鸡肉饺",
+    tagline:"「你走的路，别人还没有地图」",
+    desc:"菌菇鸡肉饺是菜单上那道"懂的人才懂"的菜。你有自己的审美、自己的节奏、自己的宇宙，不需要所有人理解你，但遇到同频的人，你们会相见恨晚。",
+    keywords:["独特","有深度","不随大流","慢热"],
+    strength:"创造力强，思维独特，能看到别人看不到的角度。",
+    blind:"有时候活在自己的世界里，与现实脱节。",
+    life:"找到能欣赏你独特性的圈子，不要为了合群而磨掉棱角。",
+    match: s => s[2]<=5 && s[1]>=6 && s[4]>=6 },
+  { id:"cheese_shrimp", emoji:"🧀", name:"芝士虾仁煎饺",
+    tagline:"「你是那个把"不可能"变成"为什么不试试"的人」",
+    desc:"芝士+虾仁+煎饺，听起来不搭，但吃一口，惊艳。你就是这种人——天马行空，打破边界，然后用结果证明：我的脑洞是对的。",
+    keywords:["创新","大胆","跨界","引领潮流"],
+    strength:"创意无限，敢于尝试，往往能走在时代前面。",
+    blind:"想法太多，落地太少，容易三分钟热度。",
+    life:"找到一个能帮你"落地"的搭档，让创意真正开花结果。",
+    match: s => s[1]>=8 && s[3]>=6 && s[4]>=6 },
+  { id:"combo", emoji:"🍲", name:"饺子+酸辣汤套餐",
+    tagline:"「有你在的地方，就有家的感觉」",
+    desc:"套餐的意义不在于某一道菜有多出色，而在于它们在一起，构成了一种完整的满足。你也是——你的价值，在关系里才能完整显现。",
+    keywords:["热心","包容","有感召力","离不开人"],
+    strength:"天生的组织者和连接者，能让不同的人融合在一起。",
+    blind:"太在意他人感受，容易忽略自己的需求。",
+    life:"在照顾别人的同时，记得也给自己留一碗汤。",
+    match: s => s[2]>=8 }
+];
+
+let currentQ = 0;
+let answers = new Array(24).fill(null);
+let scores = [0,0,0,0,0];
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function startQuiz() {
+  currentQ = 0;
+  answers = new Array(24).fill(null);
+  scores = [0,0,0,0,0];
+  renderQuestion();
+  showScreen('quiz');
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  const total = questions.length;
+  document.getElementById('counter').textContent = `${currentQ+1} / ${total}`;
+  document.getElementById('group-label').textContent = groups[q.group];
+  document.getElementById('progress').style.width = `${((currentQ+1)/total)*100}%`;
+  document.getElementById('q-num').textContent = `Q${currentQ+1}`;
+  document.getElementById('q-text').textContent = q.text;
+
+  const list = document.getElementById('options-list');
+  list.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn' + (answers[currentQ] === i ? ' selected' : '');
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => selectOption(i);
+    list.appendChild(btn);
+  });
+
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.textContent = currentQ === total-1 ? '查看结果 🥟' : '下一题 →';
+  nextBtn.className = 'btn-next' + (answers[currentQ] !== null ? ' enabled' : '');
+
+  const qc = document.getElementById('question-card');
+  qc.classList.remove('slide-in'); void qc.offsetWidth; qc.classList.add('slide-in');
+  list.classList.remove('slide-in'); void list.offsetWidth; list.classList.add('slide-in');
+}
+
+function selectOption(idx) {
+  answers[currentQ] = idx;
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === idx);
+  });
+  document.getElementById('btn-next').classList.add('enabled');
+}
+
+function nextQuestion() {
+  if (answers[currentQ] === null) return;
+  if (currentQ < questions.length - 1) {
+    currentQ++;
+    renderQuestion();
+  } else {
+    calculateResult();
+  }
+}
+
+function goBack() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+  else showScreen('cover');
+}
+
+function calculateResult() {
+  showScreen('loading');
+  scores = [0,0,0,0,0];
+  answers.forEach((ans, qi) => {
+    if (ans === null) return;
+    const q = questions[qi];
+    if (q.multiDim) {
+      q.dimScores[ans].forEach((v,d) => scores[d] += v);
+    } else {
+      scores[q.dim] += q.scores[ans];
+    }
+  });
+  setTimeout(showResult, 2200);
+}
+
+function showResult() {
+  let matched = null;
+  for (const r of results) {
+    if (r.match(scores)) { matched = r; break; }
+  }
+  if (!matched) {
+    const maxIdx = scores.indexOf(Math.max(...scores));
+    matched = results[Math.min(maxIdx, results.length-1)];
+  }
+
+  document.getElementById('r-emoji').textContent = matched.emoji;
+  document.getElementById('r-name').textContent = matched.name;
+  document.getElementById('r-tagline').textContent = matched.tagline;
+  document.getElementById('r-desc').textContent = matched.desc;
+  document.getElementById('r-strength').textContent = matched.strength;
+  document.getElementById('r-blind').textContent = matched.blind;
+  document.getElementById('r-life').textContent = matched.life;
+  document.getElementById('r-keywords').innerHTML =
+    matched.keywords.map(k => `<span class="keyword-tag">${k}</span>`).join('');
+
+  const dimNames = ['能量感','创新度','社交性','冒险性','丰富性'];
+  document.getElementById('r-scores').innerHTML = dimNames.map((name, i) => {
+    const pct = Math.round((scores[i] / 12) * 100);
+    return `<div class="score-row">
+      <span class="score-label">${name}</span>
+      <div class="score-track"><div class="score-bar" data-pct="${pct}"></div></div>
+      <span class="score-val">${pct}%</span>
+    </div>`;
+  }).join('');
+
+  showScreen('result');
+  setTimeout(() => {
+    document.querySelectorAll('.score-bar').forEach(b => { b.style.width = b.dataset.pct + '%'; });
+  }, 120);
+}
+
+function retryQuiz() { startQuiz(); }
+
+function shareResult() {
+  const name = document.getElementById('r-name').textContent;
+  const text = `我在袁记云饺性格测试中测出来是「${name}」！你是哪道菜？快来测测 🥟`;
+  if (navigator.share) {
+    navigator.share({ title:'你是袁记哪道菜？', text, url: window.location.href });
+  } else {
+    navigator.clipboard.writeText(text + '\n' + window.location.href)
+      .then(() => alert('已复制到剪贴板，快去分享给朋友吧！🥟'));
+  }
+}
+</script>
+</body>
+</html>
